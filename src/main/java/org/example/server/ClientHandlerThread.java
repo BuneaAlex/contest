@@ -1,17 +1,9 @@
 package org.example.server;
 
-import org.example.networking.request.GetCountryLeaderboardRequest;
-import org.example.networking.request.GetFinalLeaderboardRequest;
-import org.example.networking.request.Request;
-import org.example.networking.request.SendPointsRequest;
-import org.example.networking.response.CountryLeaderboardResponse;
-import org.example.networking.response.FinalLeaderBoardResponse;
-import org.example.networking.response.OkResponse;
-import org.example.networking.response.Response;
+import org.example.networking.request.*;
+import org.example.networking.response.*;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandlerThread extends Thread {
@@ -20,7 +12,10 @@ public class ClientHandlerThread extends Thread {
     private ObjectOutputStream output;
     private boolean connected = true;
 
-    public ClientHandlerThread(Socket socket) {
+    private SharedQueue sharedQueue;
+
+    public ClientHandlerThread(Socket socket, SharedQueue sharedQueue) {
+        this.sharedQueue = sharedQueue;
         try {
             this.socket = socket;
             input = new ObjectInputStream(socket.getInputStream());
@@ -32,20 +27,57 @@ public class ClientHandlerThread extends Thread {
         }
     }
 
-    private Response handleRequest(Request request){
+    private Response handleRequest(Request request) throws InterruptedException {
         Response response=null;
         if (request instanceof SendPointsRequest){
             SendPointsRequest  req = (SendPointsRequest) request;
-            System.out.println(req.getData());
+            //System.out.println(req.getData());
+            System.out.println("Receiving data...");
+            //for(String elem : req.getData())
+                //sharedQueue.produce(elem);
             response = new OkResponse();
-        }
-        else if (request instanceof GetCountryLeaderboardRequest) {
+        } else if (request instanceof GetCurrentCountryLeaderboardRequest) {
+            System.out.println("Sending current country leaderboard");
+
+            //Partea de future
+
+            response = new CurrentCountryLeaderboardResponse(null);
+
+        } else if (request instanceof GetCountryLeaderboardRequest) {
+            System.out.println("Sending final country leaderboard");
+
+            sendFileThroughSocket("org\\example\\server\\files\\Clasament_tari.txt");
+
             response = new CountryLeaderboardResponse(new byte[0]);
         } else if (request instanceof GetFinalLeaderboardRequest) {
+            System.out.println("Sending final participants leaderboard");
+
+            // Create a buffered input stream to read the file
+            sendFileThroughSocket("org\\example\\server\\files\\Clasament_conc.txt");
+
             response = new FinalLeaderBoardResponse(new byte[0]);
+
             connected = false;
         }
         return response;
+    }
+
+    private void sendFileThroughSocket(String filename) {
+        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename))) {
+            // Create a byte array to hold the file data
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+
+            // Read the file and send it through the socket
+            while ((bytesRead = bis.read(buffer)) != -1) {
+                System.out.println("sending file...");
+                output.write(buffer, 0, bytesRead);
+            }
+
+            System.out.println("File sent successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendResponse(Response response) throws IOException{
@@ -65,13 +97,13 @@ public class ClientHandlerThread extends Thread {
                 if (response!=null){
                     sendResponse((Response) response);
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
             try {
-                Thread.sleep(2000);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

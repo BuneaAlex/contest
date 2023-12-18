@@ -7,6 +7,8 @@ import java.net.Socket;
 public class Server {
     public static void main(String[] args) {
         final int PORT = 12345;
+        int p_writers = 4;
+        SharedQueue sharedQueue = new SharedQueue(100, p_writers);
 
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
@@ -17,7 +19,7 @@ public class Server {
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
 
                 // Create a new thread to handle the client
-                ClientHandlerThread clientHandler = new ClientHandlerThread(clientSocket);
+                ClientHandlerThread clientHandler = new ClientHandlerThread(clientSocket, sharedQueue);
                 new Thread(clientHandler).start();
             }
 
