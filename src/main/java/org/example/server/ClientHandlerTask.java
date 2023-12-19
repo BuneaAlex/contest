@@ -5,17 +5,20 @@ import org.example.networking.response.*;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class ClientHandlerThread extends Thread {
+public class ClientHandlerTask implements Runnable {
     private final Socket socket;
     private ObjectInputStream input;
     private ObjectOutputStream output;
-    private boolean connected = true;
+    private AtomicInteger connections;
+    private boolean connected;
 
     private SharedQueue sharedQueue;
 
-    public ClientHandlerThread(Socket socket, SharedQueue sharedQueue) {
+    public ClientHandlerTask(Socket socket, SharedQueue sharedQueue, AtomicInteger connections) {
         this.sharedQueue = sharedQueue;
+        this.connections = connections;
         try {
             this.socket = socket;
             input = new ObjectInputStream(socket.getInputStream());
@@ -25,6 +28,7 @@ public class ClientHandlerThread extends Thread {
             e.printStackTrace();
             throw new RuntimeException();
         }
+        this.connected = true;
     }
 
     private Response handleRequest(Request request) throws InterruptedException {
@@ -32,9 +36,9 @@ public class ClientHandlerThread extends Thread {
         if (request instanceof SendPointsRequest){
             SendPointsRequest  req = (SendPointsRequest) request;
             //System.out.println(req.getData());
-            System.out.println("Receiving data...");
-            //for(String elem : req.getData())
-                //sharedQueue.produce(elem);
+            //System.out.println("Receiving data...");
+            for(String elem : req.getData())
+                sharedQueue.produce(elem);
             response = new OkResponse();
         } else if (request instanceof GetCurrentCountryLeaderboardRequest) {
             System.out.println("Sending current country leaderboard");
@@ -57,6 +61,7 @@ public class ClientHandlerThread extends Thread {
 
             response = new FinalLeaderBoardResponse(new byte[0]);
 
+            connections.decrementAndGet();
             connected = false;
         }
         return response;

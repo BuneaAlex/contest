@@ -85,6 +85,7 @@ public class ClientThread extends Thread {
 
                 //receive clasament tari
                 sendRequest(new GetCurrentCountryLeaderboardRequest());
+
                 CurrentCountryLeaderboardResponse response = (CurrentCountryLeaderboardResponse) getResponse();
             }
 
