@@ -47,6 +47,6 @@ public class Player {
 
     @Override
     public String toString() {
-        return id + " " + score;
+        return id + " " + score + " " + country;
     }
 }

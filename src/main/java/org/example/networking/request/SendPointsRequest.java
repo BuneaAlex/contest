@@ -1,18 +1,16 @@
 package org.example.networking.request;
 
-import java.util.List;
-
 public class SendPointsRequest implements Request {
 
     private String country;
-    private List<String> data;
+    private String[] data;
 
-    public SendPointsRequest(String country, List<String> data) {
+    public SendPointsRequest(String country, String[] data) {
         this.country = country;
         this.data = data;
     }
 
-    public List<String> getData() {
+    public String[] getData() {
         return data;
     }
 

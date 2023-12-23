@@ -21,9 +21,10 @@ public class LeaderboardService {
         List<Player> playersCopy = players.copyToList();
 
         //System.out.println(playersCopy);
-
+        int count = 0;
         for (Player player : playersCopy) {
             //System.out.println(player);
+            count++;
             String country = player.getCountry();
             int score = player.getScore();
 
@@ -36,7 +37,6 @@ public class LeaderboardService {
             } else
                 countryLeaderboard.put(country, score);
         }
-
         // Sort the entries by values in descending order
         List<String> sortedLeaderboard = countryLeaderboard.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -59,6 +59,7 @@ public class LeaderboardService {
                     return o2.getScore() - o1.getScore();
                 }
             });
+            System.out.println("LISTA JUCATORI: " + playerList.size());
             for (Player p : playerList) {
                 writer.write(p.getId() + " " + p.getScore() + "\n");
             }

@@ -1,11 +1,12 @@
 package org.example.server;
 
-import org.example.networking.response.OkResponse;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -84,17 +85,19 @@ public class Server {
                 ObjectInputStream input = inputStreams.get(i);
                 System.out.println("Sending FINAL leaderboard in files");
 
+                //sendFileThroughSocket("org\\example\\server\\files\\Clasament_tari.txt",output);
+
+                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
+
+                sendFile("org\\example\\server\\files\\Clasament_tari.txt", dos);
+
                 //output.flush();
-                sendFileThroughSocket("org\\example\\server\\files\\Clasament_tari.txt",output);
 
-                synchronized (output)
-                {
-                    output.writeObject(new OkResponse());
-                    output.flush();
-                }
+                //sendFileThroughSocket("org\\example\\server\\files\\Clasament_conc.txt",output);
+                sendFile("org\\example\\server\\files\\Clasament_conc.txt", dos);
 
-                sendFileThroughSocket("org\\example\\server\\files\\Clasament_conc.txt",output);
                 clientSocket.close();
+
             }
 
 
@@ -113,14 +116,35 @@ public class Server {
             // Read the file and send it through the socket
             while ((bytesRead = bis.read(buffer)) != -1) {
                 System.out.println("sending file...");
-                //System.out.println(Arrays.toString(buffer));
                 output.write(buffer, 0, bytesRead);
             }
+            output.flush();
 
             System.out.println("File sent successfully.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    private static void sendFile(String filePath, DataOutputStream dos) throws IOException {
+        File file = new File(filePath);
+        long fileSize = file.length();
+
+        // Send the size of the file
+        dos.writeLong(fileSize);
+
+        try (FileInputStream fis = new FileInputStream(file);
+             BufferedInputStream bis = new BufferedInputStream(fis)) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = bis.read(buffer)) != -1) {
+                dos.write(buffer, 0, bytesRead);
+            }
+            dos.flush();
+        }
+    }
+
 
 }

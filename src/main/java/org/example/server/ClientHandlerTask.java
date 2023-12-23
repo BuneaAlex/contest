@@ -44,6 +44,7 @@ public class ClientHandlerTask implements Runnable {
             //System.out.println("Receiving data...");
             for(String elem : req.getData())
             {
+                System.out.println(elem);
                 String playerFormat = elem + " " + req.getCountry();
                 sharedQueue.produce(playerFormat);
             }

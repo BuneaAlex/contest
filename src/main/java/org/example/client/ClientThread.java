@@ -64,23 +64,19 @@ public class ClientThread extends Thread {
             for (String file : files) {
                 //System.out.println(file);
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    int count = 0;
                     String line;
                     List<String> points = new ArrayList<>();
                     while ((line = reader.readLine()) != null) {
-                        count++;
                         points.add(line);
-                        if (count == 20) {
-
+                        if (points.size() == 20) {
 
                             //send
                             //System.out.println(Thread.currentThread().getId() + " Sending " + points);
-                            sendRequest(new SendPointsRequest(country, points));
+                            sendRequest(new SendPointsRequest(country, points.toArray(new String[0])));
                             Response response = getResponse();
 
-                            //System.out.println(points);
+                            // System.out.println(points);
                             points.clear();
-                            count = 0;
                         }
                     }
                 } catch ( IOException e) {
@@ -98,14 +94,16 @@ public class ClientThread extends Thread {
             FinalLeaderBoardResponse responseFinal = (FinalLeaderBoardResponse) getResponse();
             //receive clasament tari
 
-            receiveFileThroughSocket("org\\example\\client\\files\\Clasament_tari.txt");
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            //receiveFileThroughSocket("org\\example\\client\\files\\Clasament_tari.txt");
+            receiveFile("org\\example\\client\\files\\Clasament_tari.txt", dis);
             System.out.println("Received final country leaderboard");
             //receive clasament final
 
-            getResponse();
 
             System.out.println("Getting final leaderboard");
-            receiveFileThroughSocket("org\\example\\client\\files\\Clasament_conc.txt");
+            //receiveFileThroughSocket("org\\example\\client\\files\\Clasament_conc.txt");
+            receiveFile("org\\example\\client\\files\\Clasament_conc.txt", dis);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -124,9 +122,29 @@ public class ClientThread extends Thread {
                 fos.write(buffer, 0, bytesRead);
             }
 
+
+
             System.out.println("File received successfully.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    private void receiveFile(String filePath, DataInputStream dis) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(filePath);
+             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+
+            // Read the file size
+            long fileSize = dis.readLong();
+            long totalRead = 0;
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while (totalRead < fileSize && (bytesRead = dis.read(buffer, 0, (int)Math.min(buffer.length, fileSize - totalRead))) != -1) {
+                bos.write(buffer, 0, bytesRead);
+                totalRead += bytesRead;
+            }
+            bos.flush();
+        }
+    }
+
 }

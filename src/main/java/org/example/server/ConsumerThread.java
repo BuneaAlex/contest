@@ -50,6 +50,7 @@ public class ConsumerThread extends Thread{
                                     players.remove(player.getId());
                                 } else {
                                     players.insert(player);
+                                    //System.out.println("Added player:" + player);
                                 }
                             }
                         }
@@ -60,7 +61,7 @@ public class ConsumerThread extends Thread{
             playerQueue.decrementWriter();
             if(playerQueue.getWritersCounter() == 0)
             {
-                //leaderboardService.writePlayerLeaderboardToFile();
+                leaderboardService.writePlayerLeaderboardToFile();
                 leaderboardService.writeCountryLeaderboardToFile();
             }
         } catch (InterruptedException e) {
