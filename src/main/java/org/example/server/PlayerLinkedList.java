@@ -1,8 +1,6 @@
 package org.example.server;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -143,5 +141,29 @@ public class PlayerLinkedList implements Iterable<Player> {
             prev.unlock();
         }
     }
+
+    public List<Player> copyToList() {
+        List<Player> playersCopy = new ArrayList<>();
+        Node current = head;
+
+        // Lock the head to ensure consistency during the copy
+        current.lock();
+        try {
+            while (current.next != tail) {
+                current = current.next;
+                current.lock(); // Lock each node during the iteration
+                try {
+                    playersCopy.add(current.player);
+                } finally {
+                    current.unlock(); // Unlock each node after processing
+                }
+            }
+        } finally {
+            head.unlock(); // Unlock the head after the copy is complete
+        }
+        return playersCopy;
+    }
+
+
 }
 

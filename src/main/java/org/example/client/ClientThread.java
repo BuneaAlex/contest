@@ -1,7 +1,9 @@
 package org.example.client;
 
-import org.example.networking.request.*;
-import org.example.networking.response.CountryLeaderboardResponse;
+import org.example.networking.request.GetCurrentCountryLeaderboardRequest;
+import org.example.networking.request.GetFinalLeaderboardRequest;
+import org.example.networking.request.Request;
+import org.example.networking.request.SendPointsRequest;
 import org.example.networking.response.CurrentCountryLeaderboardResponse;
 import org.example.networking.response.FinalLeaderBoardResponse;
 import org.example.networking.response.Response;
@@ -13,6 +15,7 @@ import java.util.List;
 
 public class ClientThread extends Thread {
 
+    private final String country;
     private List<String> files;
     private static final String SERVER_ADDRESS = "localhost";
     private static final int PORT = 12345;
@@ -20,7 +23,8 @@ public class ClientThread extends Thread {
     private ObjectInputStream input;
     private ObjectOutputStream output;
 
-    public ClientThread(List<String> files) {
+    public ClientThread(String country, List<String> files) {
+        this.country = country;
         this.files = files;
     }
 
@@ -58,7 +62,7 @@ public class ClientThread extends Thread {
             openConnection();
 
             for (String file : files) {
-                System.out.println(file);
+                //System.out.println(file);
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     int count = 0;
                     String line;
@@ -71,7 +75,7 @@ public class ClientThread extends Thread {
 
                             //send
                             //System.out.println(Thread.currentThread().getId() + " Sending " + points);
-                            sendRequest(new SendPointsRequest(points));
+                            sendRequest(new SendPointsRequest(country, points));
                             Response response = getResponse();
 
                             //System.out.println(points);
@@ -87,22 +91,24 @@ public class ClientThread extends Thread {
                 sendRequest(new GetCurrentCountryLeaderboardRequest());
 
                 CurrentCountryLeaderboardResponse response = (CurrentCountryLeaderboardResponse) getResponse();
-            }
 
+                System.out.println("Country " + country + " Async result:" + response.getData());
+            }
+            sendRequest(new GetFinalLeaderboardRequest());
+            FinalLeaderBoardResponse responseFinal = (FinalLeaderBoardResponse) getResponse();
             //receive clasament tari
-            sendRequest(new GetCountryLeaderboardRequest());
+            //sendRequest(new GetCountryLeaderboardRequest());
 
             receiveFileThroughSocket("org\\example\\client\\files\\Clasament_tari.txt");
 
-            CountryLeaderboardResponse response = (CountryLeaderboardResponse) getResponse();
+            //CountryLeaderboardResponse response = (CountryLeaderboardResponse) getResponse();
             System.out.println("Received final country leaderboard");
             //receive clasament final
-            sendRequest(new GetFinalLeaderboardRequest());
 
             System.out.println("Getting final leaderboard");
             receiveFileThroughSocket("org\\example\\client\\files\\Clasament_conc.txt");
 
-            FinalLeaderBoardResponse responseFinal = (FinalLeaderBoardResponse) getResponse();
+
 
         } catch (IOException e) {
             e.printStackTrace();

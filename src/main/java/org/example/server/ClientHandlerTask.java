@@ -1,10 +1,20 @@
 package org.example.server;
 
-import org.example.networking.request.*;
-import org.example.networking.response.*;
+import org.example.networking.request.GetCurrentCountryLeaderboardRequest;
+import org.example.networking.request.GetFinalLeaderboardRequest;
+import org.example.networking.request.Request;
+import org.example.networking.request.SendPointsRequest;
+import org.example.networking.response.CurrentCountryLeaderboardResponse;
+import org.example.networking.response.FinalLeaderBoardResponse;
+import org.example.networking.response.OkResponse;
+import org.example.networking.response.Response;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandlerTask implements Runnable {
@@ -13,21 +23,16 @@ public class ClientHandlerTask implements Runnable {
     private ObjectOutputStream output;
     private AtomicInteger connections;
     private boolean connected;
-
     private SharedQueue sharedQueue;
+    private final LeaderboardService leaderboardService;
 
-    public ClientHandlerTask(Socket socket, SharedQueue sharedQueue, AtomicInteger connections) {
+    public ClientHandlerTask(Socket socket, SharedQueue sharedQueue, AtomicInteger connections, LeaderboardService leaderboardService, ObjectInputStream input,ObjectOutputStream output) {
         this.sharedQueue = sharedQueue;
         this.connections = connections;
-        try {
-            this.socket = socket;
-            input = new ObjectInputStream(socket.getInputStream());
-            output = new ObjectOutputStream(socket.getOutputStream());
-            output.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
+        this.leaderboardService = leaderboardService;
+        this.socket = socket;
+        this.input = input;
+        this.output = output;
         this.connected = true;
     }
 
@@ -38,55 +43,44 @@ public class ClientHandlerTask implements Runnable {
             //System.out.println(req.getData());
             //System.out.println("Receiving data...");
             for(String elem : req.getData())
-                sharedQueue.produce(elem);
+            {
+                String playerFormat = elem + " " + req.getCountry();
+                sharedQueue.produce(playerFormat);
+            }
+
             response = new OkResponse();
         } else if (request instanceof GetCurrentCountryLeaderboardRequest) {
             System.out.println("Sending current country leaderboard");
 
-            //Partea de future
+            CompletableFuture<List<String>> futureResult = calculateCurrentCountryLeaderboard();
 
-            response = new CurrentCountryLeaderboardResponse(null);
+            // Wait for the completion of the CompletableFuture
+            List<String> result = futureResult.join();
 
-        } else if (request instanceof GetCountryLeaderboardRequest) {
-            System.out.println("Sending final country leaderboard");
+            // Set the response based on the completed asynchronous task
+            response = new CurrentCountryLeaderboardResponse(result);
 
-            sendFileThroughSocket("org\\example\\server\\files\\Clasament_tari.txt");
-
-            response = new CountryLeaderboardResponse(new byte[0]);
-        } else if (request instanceof GetFinalLeaderboardRequest) {
-            System.out.println("Sending final participants leaderboard");
-
-            // Create a buffered input stream to read the file
-            sendFileThroughSocket("org\\example\\server\\files\\Clasament_conc.txt");
+        }
+        else if (request instanceof GetFinalLeaderboardRequest) {//mutat in Server class si eventual stearsa clasa de Request
+            System.out.println("Final response");
 
             response = new FinalLeaderBoardResponse(new byte[0]);
 
-            connections.decrementAndGet();
             connected = false;
+
         }
         return response;
     }
 
-    private void sendFileThroughSocket(String filename) {
-        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename))) {
-            // Create a byte array to hold the file data
-            byte[] buffer = new byte[1024];
-            int bytesRead;
 
-            // Read the file and send it through the socket
-            while ((bytesRead = bis.read(buffer)) != -1) {
-                System.out.println("sending file...");
-                output.write(buffer, 0, bytesRead);
-            }
 
-            System.out.println("File sent successfully.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private CompletableFuture<List<String>> calculateCurrentCountryLeaderboard() {
+        // Asynchronous task
+        return CompletableFuture.supplyAsync(leaderboardService::getCurrentCountryLeaderboard);
     }
 
     private void sendResponse(Response response) throws IOException{
-        System.out.println("sending response "+response);
+        //System.out.println("sending response "+response);
         synchronized (output) {
             output.writeObject(response);
             output.flush();
@@ -107,18 +101,10 @@ public class ClientHandlerTask implements Runnable {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
         }
-        try {
-            input.close();
-            output.close();
-            socket.close();
-        } catch (IOException e) {
-            System.out.println("Error "+e);
-        }
+
+        connections.decrementAndGet();
+        System.out.println("connections:" + connections.get());
     }
 }

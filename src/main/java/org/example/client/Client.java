@@ -20,7 +20,7 @@ public class Client {
                 String filename = "org\\example\\client\\files\\" + "Rezultate" + country + "_" + "P" + pb + ".txt";
                 fileNames.add(filename);
             }
-            clientThreads[i-1] = new ClientThread(fileNames);
+            clientThreads[i-1] = new ClientThread(country,fileNames);
         }
     }
 

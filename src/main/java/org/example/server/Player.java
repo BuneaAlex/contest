@@ -3,15 +3,21 @@ package org.example.server;
 public class Player {
     private String id;
     private int score;
+    private String country;
+
+    public String getCountry() {
+        return country;
+    }
 
     Player(String id) {
         this.id = id;
         this.score = 0;
     }
 
-    public Player(String id, int score) {
+    public Player(String id, int score, String country) {
         this.id = id;
         this.score = score;
+        this.country = country;
     }
 
     public String getId() {
