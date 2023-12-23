@@ -97,18 +97,15 @@ public class ClientThread extends Thread {
             sendRequest(new GetFinalLeaderboardRequest());
             FinalLeaderBoardResponse responseFinal = (FinalLeaderBoardResponse) getResponse();
             //receive clasament tari
-            //sendRequest(new GetCountryLeaderboardRequest());
 
             receiveFileThroughSocket("org\\example\\client\\files\\Clasament_tari.txt");
-
-            //CountryLeaderboardResponse response = (CountryLeaderboardResponse) getResponse();
             System.out.println("Received final country leaderboard");
             //receive clasament final
 
+            getResponse();
+
             System.out.println("Getting final leaderboard");
             receiveFileThroughSocket("org\\example\\client\\files\\Clasament_conc.txt");
-
-
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -35,7 +35,7 @@ public class ConsumerThread extends Thread{
                 if(!playerQueue.isQueueEmpty())
                 {
                     String data = playerQueue.consume();
-                    System.out.println(data);
+                    //System.out.println(data);
                     //System.out.println(Thread.currentThread().getId() + " consume: " + data);
                     String[] dataList = data.split(" ");
                     String participant = dataList[0];
@@ -60,7 +60,7 @@ public class ConsumerThread extends Thread{
             playerQueue.decrementWriter();
             if(playerQueue.getWritersCounter() == 0)
             {
-                leaderboardService.writePlayerLeaderboardToFile();
+                //leaderboardService.writePlayerLeaderboardToFile();
                 leaderboardService.writeCountryLeaderboardToFile();
             }
         } catch (InterruptedException e) {
