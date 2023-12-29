@@ -81,14 +81,14 @@ public class ClientHandlerTask implements Runnable {
                     currentCountryLeaderboardCache.addAll(result);
                 }
                 timeWhenTheCountryLeaderboardWasSent.set(System.nanoTime());
-                //System.out.println(currentCountryLeaderboardCache);
+                System.out.println(currentCountryLeaderboardCache);
                 //System.out.println(result);
             }
             else
             {
                 System.out.println("Sending cached country leaderboard");
                 response = new CurrentCountryLeaderboardResponse(currentCountryLeaderboardCache);
-                //System.out.println(currentCountryLeaderboardCache);
+                System.out.println(currentCountryLeaderboardCache);
             }
 
 
