@@ -22,18 +22,15 @@ public class Server {
 
     private static int p_clients = 5;
     private static long delta = 100;
-    private static AtomicInteger connections = new AtomicInteger(p_clients);
-    private final static SharedQueue sharedQueue = new SharedQueue(100, p_consumers);
-    private final static PlayerLinkedList players = new PlayerLinkedList();
-    private final static Set<String> bannedIds = new HashSet<>();
-    private final static ExecutorService threadPool = Executors.newFixedThreadPool(p_producers);
-    private final static ConsumerThread[] threads = new ConsumerThread[p_consumers];
-
-    private final static LeaderboardService leaderboardService = new LeaderboardService(players);
-
-    private static final List<String> currentCountryLeaderboardCache = new CopyOnWriteArrayList<>();
-
-    private static final AtomicLong timeWhenTheCountryLeaderboardWasSent = new AtomicLong(0);
+    private static AtomicInteger connections;
+    private static SharedQueue sharedQueue;
+    private static PlayerLinkedList players;
+    private static Set<String> bannedIds;
+    private static ExecutorService threadPool;
+    private static ConsumerThread[] threads;
+    private static LeaderboardService leaderboardService;
+    private static List<String> currentCountryLeaderboardCache;
+    private static AtomicLong timeWhenTheCountryLeaderboardWasSent;
 
     private static void startConsumers() {
         for (int i = 0; i < p_consumers; i++) {
@@ -61,6 +58,17 @@ public class Server {
                 p_producers = Integer.parseInt(args[1]);
                 delta = Integer.parseInt(args[2]);
                 System.out.println("args:" + p_consumers + " " + p_producers + " " + delta);
+
+                connections = new AtomicInteger(p_clients);
+                sharedQueue = new SharedQueue(100, p_consumers);
+                players = new PlayerLinkedList();
+                bannedIds = new HashSet<>();
+                threadPool = Executors.newFixedThreadPool(p_producers);
+                threads = new ConsumerThread[p_consumers];
+                leaderboardService = new LeaderboardService(players);
+                currentCountryLeaderboardCache = new CopyOnWriteArrayList<>();
+                timeWhenTheCountryLeaderboardWasSent = new AtomicLong(0);
+
             } catch (NumberFormatException e) {
                 System.err.println("Invalid value for argument p. Using the default value.");
             }
