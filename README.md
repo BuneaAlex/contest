@@ -1,4 +1,5 @@
-Lab project done in teams of 2, where we needed to implement this:
+Lab project done in teams of 2, where we needed to implement a client-server project with a focus on parallel programming. The system utilizes a producer-consumer design pattern, employing thread pools for efficient concurrency management. Specifically, I integrated a thread pool mechanism to handle both client and server tasks concurrently. Additionally, I leveraged the use of futures to facilitate asynchronous processing, enhancing the overall responsiveness and performance of the system.
+This is the task to solve:
 Each country (client) sends its competitors' results to the organizer (server), which we consider to be present in files. The submission is done in batches of 20 pairs (competitor ID, score) at intervals of Δx (to simulate user action on the interface).
 
 The server retrieves data from clients and adds the country ID to the pairs sent by clients, creating triplets (country ID, competitor ID, score) and adds them to a blocking queue.
